@@ -47,14 +47,11 @@ jobs:
 
       - name: Bump patch version
         run: |
-          git add package.json
-          git commit -m "chore: bump version"
           npm version patch --no-git-tag-version
           git add package.json
           git commit -m "chore: version bump"
           git tag v$(node -p "require('./package.json').version")
           git push origin main --tags
-          npm version patch --no-git-tag-version
 
       - name: Build Project
         run: pnpm build
