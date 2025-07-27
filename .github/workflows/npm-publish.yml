@@ -67,6 +67,9 @@ jobs:
           pkg.types = 'libs/main.ts';
           writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           EOF
+          git add package.json
+          git commit -m "Restore original main"
+          git push origin main
 
   publish-npm:
     needs: bump-version
