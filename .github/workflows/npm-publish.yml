@@ -14,7 +14,9 @@ jobs:
   bump-version:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
-
+    with:
+      name: dist
+      path: dist
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,14 +71,21 @@ jobs:
           pkg.types = 'libs/main.ts';
           writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           EOF
+          
+      - name: "Push Restore"
+        run: |
+          git add package.json
+          git commit -m "Push Restore"
+          git push origin main
 
   publish-npm:
     needs: bump-version
     runs-on: ubuntu-latest
-
+    with:
+      name: dist
+      path: dist
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
           node-version: 20
