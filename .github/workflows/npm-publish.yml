@@ -57,6 +57,10 @@ jobs:
 
       - name: Build Project
         run: pnpm build
+      - name: Publish to NPM
+        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: Restore original main/types
         run: |
@@ -70,18 +74,3 @@ jobs:
           git add package.json
           git commit -m "Restore original main"
           git push origin main
-
-  publish-npm:
-    needs: bump-version
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          registry-url: https://registry.npmjs.org/
-      - run: npm publish
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
