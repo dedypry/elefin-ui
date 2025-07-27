@@ -8,67 +8,78 @@ on:
 
 permissions:
   contents: write
+  packages: write
 
 jobs:
   bump-version:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          
+
       - name: Setup pnpm
         run: npm install -g pnpm
 
       - name: Install dependencies
         run: pnpm install
 
-      - name: Update Package Link
-        run : |
-          node -e '
-            const fs = require("fs");
-            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-            pkg.main = "dist/main.js";
-            pkg.types = "dist/main.d.ts";
-            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
-          '
+      - name: Update package.json to point to dist
+        run: |
+          node --input-type=module <<EOF
+          import { readFileSync, writeFileSync } from 'fs';
+          const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+          pkg.main = 'dist/main.js';
+          pkg.types = 'dist/main.d.ts';
+          writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          EOF
 
-      - name: Configure Git Identity
+      - name: Configure Git
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "github-actions[bot]@users.noreply.github.com"
 
       - name: Bump patch version
         run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          npm version patch
-          git push --follow-tags
-      - name: Build and back
-        run: |
-          pnpm build
-          node -e '
-            const fs = require("fs");
-            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
-            pkg.main = "libs/main.ts";
-            pkg.types = "libs/main.ts";
-            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
-          '
+          git add package.json
+          git commit -m "chore: bump version"
+          npm version patch --no-git-tag-version
+          git add package.json
+          git commit -m "chore: version bump"
+          git tag v$(node -p "require('./package.json').version")
+          git push origin main --tags
 
+      - name: Build Project
+        run: pnpm build
+
+      - name: Restore original main/types
+        run: |
+          node --input-type=module <<EOF
+          import { readFileSync, writeFileSync } from 'fs';
+          const pkg = JSON.parse(readFileSync('package.json', 'utf-8'));
+          pkg.main = 'libs/main.ts';
+          pkg.types = 'libs/main.ts';
+          writeFileSync('package.json', JSON.stringify(pkg, null, 2));
+          EOF
 
   publish-npm:
-    needs: bump-version 
+    needs: bump-version
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
+
       - uses: actions/setup-node@v4
         with:
           node-version: 20
           registry-url: https://registry.npmjs.org/
+
       - run: npm install
       - run: npm publish
         env:
