@@ -54,6 +54,7 @@ jobs:
           git commit -m "chore: version bump"
           git tag v$(node -p "require('./package.json').version")
           git push origin main --tags
+          npm version patch --no-git-tag-version
 
       - name: Build Project
         run: pnpm build
@@ -71,9 +72,6 @@ jobs:
           pkg.types = 'libs/main.ts';
           writeFileSync('package.json', JSON.stringify(pkg, null, 2));
           EOF
-          git add package.json
-          git commit -m "Restore original main"
-          git push origin main
 
   publish-npm:
     needs: bump-version
