@@ -1,0 +1,75 @@
+name: Node.js Package
+
+on:
+  push:
+    branches: [main]
+  release:
+    types: [created]
+
+permissions:
+  contents: write
+
+jobs:
+  bump-version:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          
+      - name: Setup pnpm
+        run: npm install -g pnpm
+
+      - name: Install dependencies
+        run: pnpm install
+
+      - name: Update Package Link
+        run : |
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            pkg.main = "dist/main.js";
+            pkg.types = "dist/main.d.ts";
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+          '
+
+      - name: Configure Git Identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump patch version
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          npm version patch
+          git push --follow-tags
+      - name: Build and back
+        run: |
+          pnpm build
+          node -e '
+            const fs = require("fs");
+            const pkg = JSON.parse(fs.readFileSync("package.json", "utf8"));
+            pkg.main = "libs/main.ts";
+            pkg.types = "libs/main.ts";
+            fs.writeFileSync("package.json", JSON.stringify(pkg, null, 2));
+          '
+
+
+  publish-npm:
+    needs: bump-version 
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: https://registry.npmjs.org/
+      - run: npm install
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
