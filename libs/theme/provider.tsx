@@ -6,17 +6,19 @@ import {
   CssBaseline,
   GlobalStyles,
 } from "@mui/material";
-import colorSchemes from "./colorSchemes";
+import colorSchemes, { IPrimary } from "./colorSchemes";
 import { SidebarProvider } from "../providers/SidebarProvider";
 import typography from "./typography";
 import components from "../@core";
-import '../assets/global.css'
+import { ToastContainer } from "react-toastify";
+import "../assets/global.css";
 
 interface ITheme {
   fontFamily?: string;
+  primary?: IPrimary;
 }
 
-const defaultTheme = ({ fontFamily }: ITheme) =>
+const defaultTheme = ({ fontFamily, primary }: ITheme) =>
   createTheme({
     spacing: 8,
     breakpoints: {
@@ -29,19 +31,21 @@ const defaultTheme = ({ fontFamily }: ITheme) =>
       },
     },
     components: components(),
-    typography: typography(fontFamily || 'poppins'),
-    palette: colorSchemes(),
+    typography: typography(fontFamily || "poppins"),
+    palette: colorSchemes(primary!),
   });
 
 export interface ElefinThemeProviderProps extends ITheme {
   children: React.ReactNode;
   theme?: ReturnType<typeof createTheme>;
+  primary?: IPrimary;
 }
 
 export const ElefinThemeProvider: React.FC<ElefinThemeProviderProps> = ({
   children,
   theme,
   fontFamily,
+  primary,
 }) => {
   return (
     <MUIThemeProvider
@@ -49,6 +53,7 @@ export const ElefinThemeProvider: React.FC<ElefinThemeProviderProps> = ({
         theme ??
         defaultTheme({
           fontFamily,
+          primary,
         })
       }
     >
@@ -67,6 +72,7 @@ export const ElefinThemeProvider: React.FC<ElefinThemeProviderProps> = ({
           },
         }}
       />
+      <ToastContainer />
       <SidebarProvider>{children}</SidebarProvider>
     </MUIThemeProvider>
   );

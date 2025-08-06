@@ -1,10 +1,16 @@
-const colorSchemes = () => {
+export interface IPrimary {
+  main?: string;
+  light?: string;
+  dark?: string;
+  contrastText?: string;
+}
+const colorSchemes = (primary: IPrimary) => {
   return {
     primary: {
-      main: "#05A0C0",
-      light: "#22AECA",
-      dark: "#047085",
-      contrastText: "#FFF",
+      main: primary?.main || "#05A0C0",
+      light: primary?.light || "#22AECA",
+      dark: primary?.dark || "#047085",
+      contrastText: primary?.contrastText || "#FFF",
     },
     secondary: {
       main: "#55575D",

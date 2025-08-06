@@ -77,8 +77,14 @@ export function Sidebar({
           borderRadius: 0,
           boxShadow: (theme) =>
             `0px 0px 16px ${alpha(theme.palette.secondary.main, 0.5)}`,
-          backgroundColor: (theme) =>
-            props.bgColor || theme.palette.primary.main,
+          ...(props.bgColor
+            ? {
+                backgroundColor: props.bgColor,
+              }
+            : {
+                backgroundImage: (theme) =>
+                  `linear-gradient(255deg, ${theme.palette.primary.main}, ${theme.palette.primary.light})`,
+              }),
         },
       }}
       variant={isMobile ? "temporary" : "persistent"}
